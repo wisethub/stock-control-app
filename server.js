@@ -1,11 +1,11 @@
+const express = require("express");
 const axios = require("axios");
 
-const MANAGER_API = "https://2a05-d018-86e-6301-8eaa-25e4-a932-72d0.ip.manager.cloud/api2";
-const TOKEN = process.env.MANAGER_API_TOKEN;
-const express = require("express");
 const app = express();
-
 const PORT = process.env.PORT || 3000;
+
+const MANAGER_API = "https://wiset.manager.io/api2";
+const TOKEN = process.env.MANAGER_API_TOKEN;
 
 app.use(express.json());
 
@@ -31,24 +31,30 @@ app.post("/create-invoice", async (req, res) => {
       { name: "GRANITE", quantity: 1 }
     ];
 
-    const MANAGER_API = "https://wiset.manager.io/api2",
+    // ✅ CORRECT API CALL
+    const response = await axios.get(
+      \`\${MANAGER_API}/inventory-items\`,
       {
         headers: {
-          "X-API-KEY": TOKEN
+          "X-API-KEY": TOKEN,
           "Accept": "application/json"
         }
       }
     );
 
-    const inventory = response.data.data || [];
-    console.log(inventory);
+    // ✅ FIX RESPONSE STRUCTURE
+    const inventory = response.data || [];
 
-console.log("Inventory Items:", inventory.map(i => i.name));
+    // 🔍 DEBUG (optional)
+    console.log("Inventory Items:", inventory.map(i => i.Name));
 
     for (let item of invoiceItems) {
       const stockItem = inventory.find(
-  i => i.name.toLowerCase() === item.name.toLowerCase()
-);
+        i =>
+          i.Name &&
+          i.Name.trim().toLowerCase() === item.name.trim().toLowerCase()
+      );
+
       if (!stockItem) {
         return res.json({
           success: false,
@@ -56,7 +62,10 @@ console.log("Inventory Items:", inventory.map(i => i.name));
         });
       }
 
-      if (stockItem.qtyOnHand < item.quantity) {
+      // ⚠️ qtyOnHand may not exist → fallback to Qty
+      const qty = stockItem.qtyOnHand || stockItem.Qty || 0;
+
+      if (qty < item.quantity) {
         return res.json({
           success: false,
           message: `❌ Insufficient stock for ${item.name}`
@@ -70,14 +79,15 @@ console.log("Inventory Items:", inventory.map(i => i.name));
     });
 
   } catch (error) {
-    console.error(error.message);
+    console.error("FULL ERROR:", error.response?.data || error.message);
 
     return res.json({
       success: false,
-      message: "❌ " + error.message
+      message: "❌ " + (error.response?.data?.error || error.message)
     });
   }
 });
+
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
