@@ -70,7 +70,7 @@ app.post("/create-invoice", async (req, res) => {
 
     return res.json({
       success: false,
-      message: "❌ Error connecting to Manager API"
+      message: "❌ " + error.message
     });
   }
 });
