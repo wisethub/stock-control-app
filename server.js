@@ -27,8 +27,8 @@ app.get("/manager-extension", (req, res) => {
 app.post("/create-invoice", async (req, res) => {
   try {
     const invoiceItems = [
-      { name: "Item A", quantity: 2 },
-      { name: "Item B", quantity: 1 }
+      { name: "STONE BASE", quantity: 2 },
+      { name: "1/2" GRANITE", quantity: 1 }
     ];
 
     const response = await axios.get(
