@@ -40,7 +40,7 @@ app.post("/create-invoice", async (req, res) => {
       }
     );
 
-    const inventory = response.data;
+    const inventory = response.data.data || [];
 
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.name === item.name);
