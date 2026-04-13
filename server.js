@@ -33,14 +33,14 @@ app.post("/create-invoice", async (req, res) => {
 
     // ✅ CORRECT API CALL
     const response = await axios.get(
-      \`\${MANAGER_API}/inventory-items\`,
-      {
-        headers: {
-          "X-API-KEY": TOKEN,
-          "Accept": "application/json"
-        }
-      }
-    );
+  `${MANAGER_API}/inventory-items`,
+  {
+    headers: {
+      "X-API-KEY": TOKEN,
+      "Accept": "application/json"
+    }
+  }
+);
 
     // ✅ FIX RESPONSE STRUCTURE
     const inventory = response.data || [];
