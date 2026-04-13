@@ -31,11 +31,11 @@ app.post("/create-invoice", async (req, res) => {
       { name: "GRANITE", quantity: 1 }
     ];
 
-    const response = await axios.get(
-      `${MANAGER_API}/inventory-items?business=ogYXUFJPRFVDVElPTiBURVNUIENPTVBBTlk=`,
+    const MANAGER_API = "https://wiset.manager.io/api2",
       {
         headers: {
           "X-API-KEY": TOKEN
+          "Accept": "application/json"
         }
       }
     );
