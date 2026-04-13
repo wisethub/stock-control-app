@@ -35,7 +35,7 @@ app.post("/create-invoice", async (req, res) => {
       `${MANAGER_API}/inventory-items`,
       {
         headers: {
-          Authorization: `Bearer ${TOKEN}`
+          Authorization: TOKEN
         }
       }
     );
