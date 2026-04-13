@@ -1,3 +1,7 @@
+const axios = require("axios");
+
+const MANAGER_API = "https://wiset.manager.io/api2";
+const TOKEN = process.env.MANAGER_API_TOKEN;
 const express = require("express");
 const app = express();
 
@@ -20,13 +24,56 @@ app.get("/manager-extension", (req, res) => {
   `);
 });
 
-app.post("/create-invoice", (req, res) => {
-  res.json({
-    success: false,
-    message: "❌ Stock validation not yet connected"
-  });
-});
+app.post("/create-invoice", async (req, res) => {
+  try {
+    const invoiceItems = [
+      { name: "Item A", quantity: 2 },
+      { name: "Item B", quantity: 1 }
+    ];
 
+    const response = await axios.get(
+      `${MANAGER_API}/inventory-items`,
+      {
+        headers: {
+          Authorization: `Bearer ${TOKEN}`
+        }
+      }
+    );
+
+    const inventory = response.data;
+
+    for (let item of invoiceItems) {
+      const stockItem = inventory.find(i => i.name === item.name);
+
+      if (!stockItem) {
+        return res.json({
+          success: false,
+          message: `❌ Item not found: ${item.name}`
+        });
+      }
+
+      if (stockItem.qtyOnHand < item.quantity) {
+        return res.json({
+          success: false,
+          message: `❌ Insufficient stock for ${item.name}`
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: "✅ Stock available — invoice allowed"
+    });
+
+  } catch (error) {
+    console.error(error.message);
+
+    return res.json({
+      success: false,
+      message: "❌ Error connecting to Manager API"
+    });
+  }
+});
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });

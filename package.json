@@ -4,8 +4,8 @@
   "description": "Stock validation middleware for Manager",
   "main": "index.js",
   "scripts": {
-  "start": "node server.js"
-},
+    "start": "node server.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wisethub/stock-control-app.git"
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/wisethub/stock-control-app#readme",
   "dependencies": {
+    "axios": "^1.15.0",
     "express": "^5.2.1"
   }
 }
