@@ -28,7 +28,7 @@ app.post("/create-invoice", async (req, res) => {
   try {
     const invoiceItems = [
       { name: "STONE BASE", quantity: 2 },
-      { name: "1/2" GRANITE", quantity: 1 }
+      { name: "GRANITE", quantity: 1 }
     ];
 
     const response = await axios.get(
