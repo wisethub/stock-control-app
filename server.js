@@ -32,7 +32,7 @@ app.post("/create-invoice", async (req, res) => {
     ];
 
     const response = await axios.get(
-      `${MANAGER_API}/inventory-items`,
+      `${MANAGER_API}/inventory-items?business=ogYXUFJPRFVDVElPTiBURVNUIENPTVBBTlk=`,
       {
         headers: {
           "X-API-KEY": TOKEN
