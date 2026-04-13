@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const MANAGER_API = "https://wiset.manager.io/api2";
+const MANAGER_API = "https://2a05-d018-86e-6301-8eaa-25e4-a932-72d0.ip.manager.cloud/api2";
 const TOKEN = process.env.MANAGER_API_TOKEN;
 const express = require("express");
 const app = express();
