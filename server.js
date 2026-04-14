@@ -115,7 +115,7 @@ app.post("/create-invoice", async (req, res) => {
     console.log("PAYLOAD:", JSON.stringify(invoicePayload, null, 2));
 
     const createRes = await axios.post(
-      `${MANAGER_API}/sales-invoice`,
+  `${MANAGER_API}/sales-invoices`,
       invoicePayload,
       {
         headers: {
