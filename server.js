@@ -1,3 +1,4 @@
+console.log("CREATE INVOICE ENDPOINT HIT");
 const express = require("express");
 const axios = require("axios");
 
@@ -12,25 +13,44 @@ app.use(express.json());
 app.get("/manager-extension", (req, res) => {
   res.send(`
     <h2>Stock-Controlled Invoice</h2>
+
+    <label>Item Key:</label><br/>
+    <input id="itemKey" placeholder="Paste item Key here"/><br/><br/>
+
+    <label>Quantity:</label><br/>
+    <input id="qty" type="number" value="1"/><br/><br/>
+
     <button onclick="createInvoice()">Create Invoice</button>
 
     <script>
       async function createInvoice() {
-        const res = await fetch('/create-invoice', { method: 'POST' });
+        const key = document.getElementById("itemKey").value;
+        const quantity = Number(document.getElementById("qty").value);
+
+        const res = await fetch('/create-invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: [{ key, quantity }]
+          })
+        });
+
         const data = await res.json();
         alert(data.message);
       }
     </script>
   `);
 });
-
+        const data = await res.json();
+        alert(data.message);
+      }
+    </script>
+  `);
+});
 app.post("/create-invoice", async (req, res) => {
   try {
     // ✅ USE KEYS (REPLACE WITH REAL KEYS FROM YOUR SYSTEM)
-    const invoiceItems = [
-      { key: "PUT-REAL-KEY-1-HERE", quantity: 2 },
-      { key: "PUT-REAL-KEY-2-HERE", quantity: 1 }
-    ];
+    const invoiceItems = req.body.items || [];
 
     // ✅ FETCH INVENTORY WITH KEYS
     const response = await axios.post(
