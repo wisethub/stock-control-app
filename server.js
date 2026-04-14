@@ -96,17 +96,18 @@ app.post("/create-invoice", async (req, res) => {
 
     // 🔥 CREATE INVOICE (CORRECT FORMAT)
     // 🔥 CREATE INVOICE (CORRECT)
+// 🔥 CREATE INVOICE (SAFE FORMAT)
 const invoicePayload = {
-  contact: CUSTOMER_KEY,
+  contact: { key: CUSTOMER_KEY },   // IMPORTANT: object, not string
   date: new Date().toISOString().split("T")[0],
   lines: invoiceItems.map(item => ({
-    inventoryItem: item.key,
+    inventoryItem: { key: item.key }, // IMPORTANT: object
     quantity: item.quantity
   }))
 };
 
 const createRes = await axios.post(
-  `${MANAGER_API}/sales-invoices`,
+  `${MANAGER_API}/sales-invoice`,   // singular endpoint
   invoicePayload,
   {
     headers: {
@@ -155,7 +156,7 @@ app.get("/get-items", async (req, res) => {
 app.get("/get-customers", async (req, res) => {
   try {
     const response = await axios.get(
-      `${MANAGER_API}/contacts`,
+      `${MANAGER_API}/customers`,
       {
         headers: {
           "X-API-KEY": TOKEN
@@ -165,16 +166,10 @@ app.get("/get-customers", async (req, res) => {
 
     res.json(response.data);
 
- } catch (error) {
-  console.error("FULL ERROR:", error.response?.data || error.message);
-
-  return res.json({
-    success: false,
-    message: JSON.stringify(error.response?.data || error.message)
-  });
-}
+  } catch (error) {
+    res.json({ error: error.message });
+  }
 });
-
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
