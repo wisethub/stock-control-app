@@ -111,6 +111,27 @@ app.post("/create-invoice", async (req, res) => {
   }
 });
 
+app.get("/get-items", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${MANAGER_API}/inventory-items`,
+      {
+        headers: {
+          "X-API-KEY": TOKEN
+        },
+        params: {
+          fields: ["Key", "Name", "Qty"]
+        }
+      }
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
