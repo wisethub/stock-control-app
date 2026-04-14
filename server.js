@@ -62,7 +62,7 @@ app.post("/create-invoice", async (req, res) => {
     }
 
     // 🔍 DEBUG (SEE YOUR KEYS)
-    console.log("Inventory:", inventory);
+    console.log("Inventory FULL:", JSON.stringify(inventory, null, 2));
 
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.Key === item.key);
