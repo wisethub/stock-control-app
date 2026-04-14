@@ -33,18 +33,18 @@ app.post("/create-invoice", async (req, res) => {
     ];
 
     // ✅ FETCH INVENTORY WITH KEYS
-    const response = await axios.get(
-      `${MANAGER_API}/inventory-items`,
-      {
-        headers: {
-          "X-API-KEY": TOKEN,
-          "Accept": "application/json"
-        },
-        params: {
-          fields: ["Key", "Name", "Qty"]
-        }
-      }
-    );
+    const response = await axios.post(
+  `${MANAGER_API}/inventory-items`,
+  {
+    fields: ["Key", "Name", "Qty"]
+  },
+  {
+    headers: {
+      "X-API-KEY": TOKEN,
+      "Content-Type": "application/json"
+    }
+  }
+);
 
     // ✅ NORMALIZE RESPONSE
     let inventory = [];
