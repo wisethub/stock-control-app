@@ -26,12 +26,13 @@ app.get("/manager-extension", (req, res) => {
 
 app.post("/create-invoice", async (req, res) => {
   try {
+    // ✅ USE KEYS (REPLACE WITH REAL KEYS FROM YOUR SYSTEM)
     const invoiceItems = [
-      { name: "STONE BASE", quantity: 2 },
-      { name: "GRANITE", quantity: 1 }
+      { key: "PUT-REAL-KEY-1-HERE", quantity: 2 },
+      { key: "PUT-REAL-KEY-2-HERE", quantity: 1 }
     ];
 
-    // ✅ API CALL WITH FIELD CONTROL (IMPORTANT)
+    // ✅ FETCH INVENTORY WITH KEYS
     const response = await axios.get(
       `${MANAGER_API}/inventory-items`,
       {
@@ -45,7 +46,7 @@ app.post("/create-invoice", async (req, res) => {
       }
     );
 
-    // ✅ HANDLE ALL POSSIBLE RESPONSE STRUCTURES
+    // ✅ NORMALIZE RESPONSE
     let inventory = [];
 
     if (Array.isArray(response.data)) {
@@ -53,27 +54,23 @@ app.post("/create-invoice", async (req, res) => {
     } else if (Array.isArray(response.data.data)) {
       inventory = response.data.data;
     } else if (Array.isArray(response.data.rows)) {
-      // fallback for tabular format
       inventory = response.data.rows.map(row => ({
+        Key: row[0],
         Name: row[1],
         Qty: row[2]
       }));
     }
 
-    // 🔍 DEBUG (SAFE)
-    console.log("Inventory Items:", inventory.map(i => i.Name));
+    // 🔍 DEBUG (SEE YOUR KEYS)
+    console.log("Inventory:", inventory);
 
     for (let item of invoiceItems) {
-      const stockItem = inventory.find(
-        i =>
-          i.Name &&
-          i.Name.trim().toLowerCase() === item.name.trim().toLowerCase()
-      );
+      const stockItem = inventory.find(i => i.Key === item.key);
 
       if (!stockItem) {
         return res.json({
           success: false,
-          message: `❌ Item not found: ${item.name}`
+          message: `❌ Item not found for key: ${item.key}`
         });
       }
 
@@ -82,7 +79,7 @@ app.post("/create-invoice", async (req, res) => {
       if (qty < item.quantity) {
         return res.json({
           success: false,
-          message: `❌ Insufficient stock for ${item.name}`
+          message: `❌ Insufficient stock for ${stockItem.Name}`
         });
       }
     }
