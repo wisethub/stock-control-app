@@ -71,13 +71,13 @@ app.post("/create-invoice", async (req, res) => {
     if (Array.isArray(response.data)) {
       inventory = response.data;
     } else if (Array.isArray(response.data.data)) {
-      inventory = response.data.data;
+      inventory = response.data.inventoryItems || [];
     }
 
     console.log("Inventory FULL:", JSON.stringify(inventory, null, 2));
 
     for (let item of invoiceItems) {
-      const stockItem = inventory.find(i => i.Key === item.key);
+      const qty = Number(stockItem.qtyOnHand || 0);
 
       if (!stockItem) {
         return res.json({
