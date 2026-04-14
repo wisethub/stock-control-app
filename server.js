@@ -14,8 +14,8 @@ app.get("/manager-extension", (req, res) => {
   res.send(`
     <h2>Stock-Controlled Invoice</h2>
 
-    <label>Item Key:</label><br/>
-    <input id="itemKey" placeholder="Paste item Key here"/><br/><br/>
+    <label>Select Item:</label><br/>
+    <select id="itemSelect"></select><br/><br/>
 
     <label>Quantity:</label><br/>
     <input id="qty" type="number" value="1"/><br/><br/>
@@ -23,30 +23,43 @@ app.get("/manager-extension", (req, res) => {
     <button onclick="createInvoice()">Create Invoice</button>
 
     <script>
-      async function createInvoice() {
-        try {
-          const key = document.getElementById("itemKey").value;
-          const quantity = Number(document.getElementById("qty").value);
+      // 🔹 Load items into dropdown
+      async function loadItems() {
+        const res = await fetch('/get-items');
+        const data = await res.json();
 
-          const res = await fetch('/create-invoice', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              items: [{ key, quantity }]
-            })
-          });
+        const select = document.getElementById("itemSelect");
 
-          const data = await res.json();
-          alert(data.message);
-
-        } catch (e) {
-          alert("Frontend error: " + e.message);
-        }
+        (data.inventoryItems || []).forEach(item => {
+          const option = document.createElement("option");
+          option.value = item.key;
+          option.text = item.itemName + " (Stock: " + item.qtyOnHand + ")";
+          select.appendChild(option);
+        });
       }
+
+      // 🔹 Create invoice
+      async function createInvoice() {
+        const key = document.getElementById("itemSelect").value;
+        const quantity = Number(document.getElementById("qty").value);
+
+        const res = await fetch('/create-invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: [{ key, quantity }]
+          })
+        });
+
+        const data = await res.json();
+        alert(data.message);
+      }
+
+      // 🔹 Load on page start
+      loadItems();
     </script>
   `);
 });
-
 /* ================= BACKEND ================= */
 app.post("/create-invoice", async (req, res) => {
   try {
