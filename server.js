@@ -69,8 +69,8 @@ app.post("/create-invoice", async (req, res) => {
     const invoiceItems = req.body.items || [];
 
     // 🔹 GET INVENTORY
-    const response = await axios.get(
-      `${MANAGER_API}/inventory-items`,
+    const createRes = await axios.post(
+  `${MANAGER_API}/sales-invoice`,
       {
         headers: {
           "X-API-KEY": TOKEN
