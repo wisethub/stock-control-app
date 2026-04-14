@@ -31,21 +31,36 @@ app.post("/create-invoice", async (req, res) => {
       { name: "GRANITE", quantity: 1 }
     ];
 
-    // ✅ CORRECT API CALL
+    // ✅ API CALL WITH FIELD CONTROL (IMPORTANT)
     const response = await axios.get(
-  `${MANAGER_API}/inventory-items`,
-  {
-    headers: {
-      "X-API-KEY": TOKEN,
-      "Accept": "application/json"
+      `${MANAGER_API}/inventory-items`,
+      {
+        headers: {
+          "X-API-KEY": TOKEN,
+          "Accept": "application/json"
+        },
+        params: {
+          fields: ["Key", "Name", "Qty"]
+        }
+      }
+    );
+
+    // ✅ HANDLE ALL POSSIBLE RESPONSE STRUCTURES
+    let inventory = [];
+
+    if (Array.isArray(response.data)) {
+      inventory = response.data;
+    } else if (Array.isArray(response.data.data)) {
+      inventory = response.data.data;
+    } else if (Array.isArray(response.data.rows)) {
+      // fallback for tabular format
+      inventory = response.data.rows.map(row => ({
+        Name: row[1],
+        Qty: row[2]
+      }));
     }
-  }
-);
 
-    // ✅ FIX RESPONSE STRUCTURE
-    const inventory = response.data || [];
-
-    // 🔍 DEBUG (optional)
+    // 🔍 DEBUG (SAFE)
     console.log("Inventory Items:", inventory.map(i => i.Name));
 
     for (let item of invoiceItems) {
@@ -62,8 +77,7 @@ app.post("/create-invoice", async (req, res) => {
         });
       }
 
-      // ⚠️ qtyOnHand may not exist → fallback to Qty
-      const qty = stockItem.qtyOnHand || stockItem.Qty || 0;
+      const qty = Number(stockItem.Qty || 0);
 
       if (qty < item.quantity) {
         return res.json({
