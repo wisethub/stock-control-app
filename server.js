@@ -63,8 +63,6 @@ app.get("/manager-extension", (req, res) => {
 /* ================= BACKEND ================= */
 app.post("/create-invoice", async (req, res) => {
   try {
-    console.log("CREATE INVOICE ENDPOINT HIT");
-
     const invoiceItems = req.body.items || [];
 
     const response = await axios.get(
@@ -78,8 +76,7 @@ app.post("/create-invoice", async (req, res) => {
 
     const inventory = response.data.inventoryItems || [];
 
-    console.log("Inventory FULL:", JSON.stringify(inventory, null, 2));
-
+    // 🔹 Validate stock
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.key === item.key);
 
@@ -100,17 +97,40 @@ app.post("/create-invoice", async (req, res) => {
       }
     }
 
+    // 🔥 CREATE INVOICE
+    const CUSTOMER_KEY = "PASTE_CUSTOMER_KEY_HERE";
+
+    const invoicePayload = {
+      contact: CUSTOMER_KEY,
+      date: new Date().toISOString().split("T")[0],
+      inventoryItems: invoiceItems.map(item => ({
+        inventoryItem: item.key,
+        qty: item.quantity
+      }))
+    };
+
+    await axios.post(
+      `${MANAGER_API}/sales-invoices`,
+      invoicePayload,
+      {
+        headers: {
+          "X-API-KEY": TOKEN,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
     return res.json({
       success: true,
-      message: "✅ Stock available — invoice allowed"
+      message: "✅ Invoice created successfully"
     });
 
   } catch (error) {
-    console.error("FULL ERROR:", error.response?.data || error.message);
+    console.error(error.response?.data || error.message);
 
     return res.json({
       success: false,
-      message: "❌ " + (error.response?.data?.error || error.message)
+      message: "❌ Failed to create invoice"
     });
   }
 });
