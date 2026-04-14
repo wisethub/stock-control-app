@@ -94,11 +94,11 @@ app.post("/create-invoice", async (req, res) => {
       const qty = Number(stockItem.qtyOnHand || 0);
 
       if (qty < item.quantity) {
-        return res.json({
-          success: false,
-          message: \`❌ Insufficient stock for \${stockItem.itemName}\`
-        });
-      }
+  return res.json({
+    success: false,
+    message: "❌ Insufficient stock for " + stockItem.itemName
+  });
+}
     }
 
     // ✅ CREATE INVOICE (FINAL CORRECT FORMAT)
