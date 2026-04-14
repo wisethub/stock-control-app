@@ -59,39 +59,30 @@ app.post("/create-invoice", async (req, res) => {
       {
         headers: {
           "X-API-KEY": TOKEN
-        },
-        params: {
-          fields: ["Key", "Name", "Qty"]
         }
       }
     );
 
-    let inventory = [];
-
-    if (Array.isArray(response.data)) {
-      inventory = response.data;
-    } else if (Array.isArray(response.data.data)) {
-      inventory = response.data.inventoryItems || [];
-    }
+    const inventory = response.data.inventoryItems || [];
 
     console.log("Inventory FULL:", JSON.stringify(inventory, null, 2));
 
     for (let item of invoiceItems) {
-      const qty = Number(stockItem.qtyOnHand || 0);
+      const stockItem = inventory.find(i => i.key === item.key);
 
       if (!stockItem) {
         return res.json({
           success: false,
-          message: `❌ Item not found`
+          message: "❌ Item not found"
         });
       }
 
-      const qty = Number(stockItem.Qty || 0);
+      const qty = Number(stockItem.qtyOnHand || 0);
 
       if (qty < item.quantity) {
         return res.json({
           success: false,
-          message: `❌ Insufficient stock for ${stockItem.Name}`
+          message: `❌ Insufficient stock for ${stockItem.itemName}`
         });
       }
     }
@@ -111,6 +102,7 @@ app.post("/create-invoice", async (req, res) => {
   }
 });
 
+/* ================= GET ITEMS ================= */
 app.get("/get-items", async (req, res) => {
   try {
     const response = await axios.get(
@@ -118,9 +110,6 @@ app.get("/get-items", async (req, res) => {
       {
         headers: {
           "X-API-KEY": TOKEN
-        },
-        params: {
-          fields: ["Key", "Name", "Qty"]
         }
       }
     );
