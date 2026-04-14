@@ -7,6 +7,9 @@ const PORT = process.env.PORT || 3000;
 const MANAGER_API = "https://wiset.manager.io/api2";
 const TOKEN = process.env.MANAGER_API_TOKEN;
 
+// 🔥 IMPORTANT: Replace this with your real customer key
+const CUSTOMER_KEY = "PASTE_CUSTOMER_KEY_HERE";
+
 app.use(express.json());
 
 /* ================= FRONTEND ================= */
@@ -23,7 +26,6 @@ app.get("/manager-extension", (req, res) => {
     <button onclick="createInvoice()">Create Invoice</button>
 
     <script>
-      // 🔹 Load items into dropdown
       async function loadItems() {
         const res = await fetch('/get-items');
         const data = await res.json();
@@ -38,7 +40,6 @@ app.get("/manager-extension", (req, res) => {
         });
       }
 
-      // 🔹 Create invoice
       async function createInvoice() {
         const key = document.getElementById("itemSelect").value;
         const quantity = Number(document.getElementById("qty").value);
@@ -55,16 +56,19 @@ app.get("/manager-extension", (req, res) => {
         alert(data.message);
       }
 
-      // 🔹 Load on page start
       loadItems();
     </script>
   `);
 });
+
 /* ================= BACKEND ================= */
 app.post("/create-invoice", async (req, res) => {
   try {
+    console.log("CREATE INVOICE START");
+
     const invoiceItems = req.body.items || [];
 
+    // 🔹 GET INVENTORY
     const response = await axios.get(
       `${MANAGER_API}/inventory-items`,
       {
@@ -76,7 +80,9 @@ app.post("/create-invoice", async (req, res) => {
 
     const inventory = response.data.inventoryItems || [];
 
-    // 🔹 Validate stock
+    console.log("Inventory count:", inventory.length);
+
+    // 🔹 VALIDATE STOCK
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.key === item.key);
 
@@ -97,19 +103,17 @@ app.post("/create-invoice", async (req, res) => {
       }
     }
 
-    // 🔥 CREATE INVOICE
-    const CUSTOMER_KEY = "PASTE_CUSTOMER_KEY_HERE";
-
+    // 🔥 CREATE INVOICE (CORRECT FORMAT)
     const invoicePayload = {
       contact: CUSTOMER_KEY,
       date: new Date().toISOString().split("T")[0],
-      inventoryItems: invoiceItems.map(item => ({
+      lines: invoiceItems.map(item => ({
         inventoryItem: item.key,
-        qty: item.quantity
+        quantity: item.quantity
       }))
     };
 
-    await axios.post(
+    const createRes = await axios.post(
       `${MANAGER_API}/sales-invoices`,
       invoicePayload,
       {
@@ -120,13 +124,15 @@ app.post("/create-invoice", async (req, res) => {
       }
     );
 
+    console.log("INVOICE RESPONSE:", createRes.data);
+
     return res.json({
       success: true,
       message: "✅ Invoice created successfully"
     });
 
   } catch (error) {
-    console.error(error.response?.data || error.message);
+    console.error("ERROR:", error.response?.data || error.message);
 
     return res.json({
       success: false,
@@ -154,6 +160,7 @@ app.get("/get-items", async (req, res) => {
   }
 });
 
+/* ================= GET CUSTOMERS ================= */
 app.get("/get-customers", async (req, res) => {
   try {
     const response = await axios.get(
