@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 const MANAGER_API = "https://wiset.manager.io/api2";
 const TOKEN = process.env.MANAGER_API_TOKEN;
 
-// 🔥 IMPORTANT: Replace this with your real customer key
+// 🔥 Your real customer key (already correct)
 const CUSTOMER_KEY = "8b2b501c-84c9-4ee8-b0e4-30a25298b829";
 
 app.use(express.json());
@@ -68,12 +68,19 @@ app.post("/create-invoice", async (req, res) => {
 
     const invoiceItems = req.body.items || [];
 
-    // 🔹 GET INVENTORY
-        const inventory = response.data.inventoryItems || [];
+    // ✅ GET INVENTORY (FIXED)
+    const response = await axios.get(
+      `${MANAGER_API}/inventory-items`,
+      {
+        headers: { "X-API-KEY": TOKEN }
+      }
+    );
+
+    const inventory = response.data.inventoryItems || [];
 
     console.log("Inventory count:", inventory.length);
 
-    // 🔹 VALIDATE STOCK
+    // ✅ VALIDATE STOCK
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.key === item.key);
 
@@ -89,36 +96,36 @@ app.post("/create-invoice", async (req, res) => {
       if (qty < item.quantity) {
         return res.json({
           success: false,
-          message: `❌ Insufficient stock for ${stockItem.itemName}`
+          message: \`❌ Insufficient stock for \${stockItem.itemName}\`
         });
       }
     }
 
-    // 🔥 CREATE INVOICE (CORRECT FORMAT)
-    // 🔥 CREATE INVOICE (CORRECT)
-// 🔥 CREATE INVOICE (SAFE FORMAT)
-const invoicePayload = {
-  contact: { key: CUSTOMER_KEY },   // MUST be object
-  date: new Date().toISOString().split("T")[0],
-  reference: "API Invoice",
-  lines: invoiceItems.map(item => ({
-    inventoryItem: { key: item.key },   // MUST be object
-    quantity: item.quantity
-  }))
-};
+    // ✅ CREATE INVOICE (FINAL CORRECT FORMAT)
+    const invoicePayload = {
+      contact: { key: CUSTOMER_KEY },
+      date: new Date().toISOString().split("T")[0],
+      reference: "API Invoice",
+      lines: invoiceItems.map(item => ({
+        inventoryItem: { key: item.key },
+        quantity: item.quantity
+      }))
+    };
 
-const createRes = await axios.post(
-  `${MANAGER_API}/sales-invoice`,
-  invoicePayload,
-  {
-    headers: {
-      "X-API-KEY": TOKEN,
-      "Content-Type": "application/json"
-    }
-  }
-);
+    console.log("PAYLOAD:", JSON.stringify(invoicePayload, null, 2));
 
-console.log("INVOICE RESPONSE:", JSON.stringify(createRes.data, null, 2));
+    const createRes = await axios.post(
+      `${MANAGER_API}/sales-invoice`,
+      invoicePayload,
+      {
+        headers: {
+          "X-API-KEY": TOKEN,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    console.log("SUCCESS RESPONSE:", createRes.data);
 
     return res.json({
       success: true,
@@ -126,11 +133,11 @@ console.log("INVOICE RESPONSE:", JSON.stringify(createRes.data, null, 2));
     });
 
   } catch (error) {
-    console.error("ERROR:", error.response?.data || error.message);
+    console.error("🔥 FULL ERROR:", error.response?.data || error.message);
 
     return res.json({
       success: false,
-      message: "❌ Failed to create invoice"
+      message: JSON.stringify(error.response?.data || error.message)
     });
   }
 });
@@ -141,9 +148,7 @@ app.get("/get-items", async (req, res) => {
     const response = await axios.get(
       `${MANAGER_API}/inventory-items`,
       {
-        headers: {
-          "X-API-KEY": TOKEN
-        }
+        headers: { "X-API-KEY": TOKEN }
       }
     );
 
@@ -160,23 +165,20 @@ app.get("/get-customers", async (req, res) => {
     const response = await axios.get(
       `${MANAGER_API}/customers`,
       {
-        headers: {
-          "X-API-KEY": TOKEN
-        }
+        headers: { "X-API-KEY": TOKEN }
       }
     );
 
     res.json(response.data);
 
   } catch (error) {
-  console.error("FULL ERROR:", error.response?.data || error.message);
-
-  return res.json({
-    success: false,
-    message: JSON.stringify(error.response?.data || error.message)
-  });
-}
+    res.json({
+      success: false,
+      message: error.response?.data || error.message
+    });
+  }
 });
+
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
