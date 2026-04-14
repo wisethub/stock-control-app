@@ -8,7 +8,7 @@ const MANAGER_API = "https://wiset.manager.io/api2";
 const TOKEN = process.env.MANAGER_API_TOKEN;
 
 // 🔥 IMPORTANT: Replace this with your real customer key
-const CUSTOMER_KEY = "PASTE_CUSTOMER_KEY_HERE";
+const CUSTOMER_KEY = "8b2b501c-84c9-4ee8-b0e4-30a25298b829";
 
 app.use(express.json());
 
