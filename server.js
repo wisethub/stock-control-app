@@ -98,16 +98,17 @@ app.post("/create-invoice", async (req, res) => {
     // 🔥 CREATE INVOICE (CORRECT)
 // 🔥 CREATE INVOICE (SAFE FORMAT)
 const invoicePayload = {
-  contact: { key: CUSTOMER_KEY },   // IMPORTANT: object, not string
+  contact: { key: CUSTOMER_KEY },   // MUST be object
   date: new Date().toISOString().split("T")[0],
+  reference: "API Invoice",
   lines: invoiceItems.map(item => ({
-    inventoryItem: { key: item.key }, // IMPORTANT: object
+    inventoryItem: { key: item.key },   // MUST be object
     quantity: item.quantity
   }))
 };
 
 const createRes = await axios.post(
-  `${MANAGER_API}/sales-invoice`,   // singular endpoint
+  `${MANAGER_API}/sales-invoice`,
   invoicePayload,
   {
     headers: {
@@ -117,7 +118,8 @@ const createRes = await axios.post(
   }
 );
 
-console.log("INVOICE RESPONSE:", createRes.data);
+console.log("INVOICE RESPONSE:", JSON.stringify(createRes.data, null, 2));
+
     return res.json({
       success: true,
       message: "✅ Invoice created successfully"
@@ -167,8 +169,13 @@ app.get("/get-customers", async (req, res) => {
     res.json(response.data);
 
   } catch (error) {
-    res.json({ error: error.message });
-  }
+  console.error("FULL ERROR:", error.response?.data || error.message);
+
+  return res.json({
+    success: false,
+    message: JSON.stringify(error.response?.data || error.message)
+  });
+}
 });
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
