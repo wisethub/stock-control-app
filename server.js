@@ -165,9 +165,14 @@ app.get("/get-customers", async (req, res) => {
 
     res.json(response.data);
 
-  } catch (error) {
-    res.json({ error: error.message });
-  }
+ } catch (error) {
+  console.error("FULL ERROR:", error.response?.data || error.message);
+
+  return res.json({
+    success: false,
+    message: JSON.stringify(error.response?.data || error.message)
+  });
+}
 });
 
 app.listen(PORT, () => {
