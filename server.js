@@ -104,28 +104,28 @@ app.post("/create-invoice", async (req, res) => {
     }
 
     // 🔥 CREATE INVOICE (CORRECT FORMAT)
-    const invoicePayload = {
-      contact: CUSTOMER_KEY,
-      date: new Date().toISOString().split("T")[0],
-      lines: invoiceItems.map(item => ({
-        inventoryItem: item.key,
-        quantity: item.quantity
-      }))
-    };
+    // 🔥 CREATE INVOICE (CORRECT)
+const invoicePayload = {
+  contact: CUSTOMER_KEY,
+  date: new Date().toISOString().split("T")[0],
+  lines: invoiceItems.map(item => ({
+    inventoryItem: item.key,
+    quantity: item.quantity
+  }))
+};
 
-    const createRes = await axios.post(
-      `${MANAGER_API}/sales-invoices`,
-      invoicePayload,
-      {
-        headers: {
-          "X-API-KEY": TOKEN,
-          "Content-Type": "application/json"
-        }
-      }
-    );
+const createRes = await axios.post(
+  `${MANAGER_API}/sales-invoices`,
+  invoicePayload,
+  {
+    headers: {
+      "X-API-KEY": TOKEN,
+      "Content-Type": "application/json"
+    }
+  }
+);
 
-    console.log("INVOICE RESPONSE:", createRes.data);
-
+console.log("INVOICE RESPONSE:", createRes.data);
     return res.json({
       success: true,
       message: "✅ Invoice created successfully"
