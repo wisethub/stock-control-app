@@ -134,6 +134,24 @@ app.get("/get-items", async (req, res) => {
   }
 });
 
+app.get("/get-customers", async (req, res) => {
+  try {
+    const response = await axios.get(
+      `${MANAGER_API}/contacts`,
+      {
+        headers: {
+          "X-API-KEY": TOKEN
+        }
+      }
+    );
+
+    res.json(response.data);
+
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
