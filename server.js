@@ -168,50 +168,53 @@ app.get("/get-items", async (req, res) => {
 /* ================= GET CUSTOMERS ================= */
 app.get("/stock-check", (req, res) => {
   res.send(`
-    <h2>Quick Stock Checker</h2>
+    <h2>🔍 Smart Stock Search</h2>
 
-    <select id="itemSelect"></select><br/><br/>
-    <button onclick="checkStock()">Check Stock</button>
-
-    <h3 id="result"></h3>
+    <input id="search" placeholder="Type item name..." style="width:300px;padding:8px;" />
+    <div id="results" style="margin-top:15px;"></div>
 
     <script>
-  let items = [];
+      let items = [];
 
-  async function loadItems() {
-    const res = await fetch('/get-items');
-    const data = await res.json();
+      async function loadItems() {
+        const res = await fetch('/get-items');
+        const data = await res.json();
+        items = data.inventoryItems || [];
+      }
 
-    items = data.inventoryItems || [];
+      function searchItems() {
+        const query = document.getElementById("search").value.toLowerCase();
+        const resultsDiv = document.getElementById("results");
 
-    const select = document.getElementById("itemSelect");
+        if (!query) {
+          resultsDiv.innerHTML = "";
+          return;
+        }
 
-    items.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item.key;
-      option.text = item.itemName + " | Stock: " + item.qtyOnHand;
-      select.appendChild(option);
-    });
+        const filtered = items.filter(i =>
+          i.itemName && i.itemName.toLowerCase().includes(query)
+        );
 
-    // 🔥 Show stock immediately when changed
-    select.addEventListener("change", showStock);
+        if (filtered.length === 0) {
+          resultsDiv.innerHTML = "<p>No item found</p>";
+          return;
+        }
 
-    // 🔥 Show first item automatically
-    showStock();
-  }
+        resultsDiv.innerHTML = filtered.map(item => `
+          <div style="padding:8px;border-bottom:1px solid #ccc;">
+            <strong>\${item.itemName}</strong><br/>
+            Stock: \${item.qtyOnHand}
+          </div>
+        `).join("");
+      }
 
-  function showStock() {
-    const key = document.getElementById("itemSelect").value;
-    const item = items.find(i => i.key === key);
-
-    document.getElementById("result").innerText =
-      item ? ("Item: " + item.itemName + " | Stock: " + item.qtyOnHand) : "Item not found";
-  }
-
-  loadItems();
-</script>  `);
+      document.addEventListener("DOMContentLoaded", () => {
+        loadItems();
+        document.getElementById("search").addEventListener("input", searchItems);
+      });
+    </script>
+  `);
 });
-
 app.get("/get-customers", async (req, res) => {
   try {
     const response = await axios.get(
