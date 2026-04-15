@@ -41,20 +41,26 @@ app.get("/manager-extension", (req, res) => {
       }
 
       async function createInvoice() {
-        const key = document.getElementById("itemSelect").value;
-        const quantity = Number(document.getElementById("qty").value);
+  const key = document.getElementById("itemSelect").value;
+  const quantity = Number(document.getElementById("qty").value);
 
-        const res = await fetch('/create-invoice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: [{ key, quantity }]
-          })
-        });
+  const res = await fetch('/create-invoice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      items: [{ key, quantity }]
+    })
+  });
 
-        const data = await res.json();
-        alert(data.message);
-      }
+  const data = await res.json();
+
+  alert(data.message);
+
+  // 🔥 REDIRECT IF SUCCESS
+  if (data.success) {
+    window.open("https://wiset.manager.io", "_blank");
+  }
+}
 
       loadItems();
     </script>
@@ -128,9 +134,9 @@ app.post("/create-invoice", async (req, res) => {
     console.log("SUCCESS RESPONSE:", createRes.data);
 
     return res.json({
-      success: true,
-      message: "✅ Invoice created successfully"
-    });
+  success: true,
+  message: "✅ Stock OK — proceed to create invoice"
+});
 
   } catch (error) {
     console.error("🔥 FULL ERROR:", error.response?.data || error.message);
