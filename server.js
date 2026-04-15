@@ -53,15 +53,15 @@ app.get("/manager-extension", (req, res) => {
   });
 
   const data = await res.json();
-
   alert(data.message);
 
-  // 🔥 REDIRECT IF SUCCESS
   if (data.success) {
-    window.open("https://wiset.manager.io", "_blank");
+    window.open(
+      "https://wiset.manager.io/start?ogYXUFJPRFVDVElPTiBURVNUIENPTVBBTlk#/sales-invoices",
+      "_blank"
+    );
   }
 }
-
       loadItems();
     </script>
   `);
@@ -166,6 +166,48 @@ app.get("/get-items", async (req, res) => {
 });
 
 /* ================= GET CUSTOMERS ================= */
+app.get("/stock-check", (req, res) => {
+  res.send(`
+    <h2>Quick Stock Checker</h2>
+
+    <select id="itemSelect"></select><br/><br/>
+    <button onclick="checkStock()">Check Stock</button>
+
+    <h3 id="result"></h3>
+
+    <script>
+      let items = [];
+
+      async function loadItems() {
+        const res = await fetch('/get-items');
+        const data = await res.json();
+
+        items = data.inventoryItems || [];
+
+        const select = document.getElementById("itemSelect");
+
+        items.forEach(item => {
+          const option = document.createElement("option");
+          option.value = item.key;
+          option.text = item.itemName;
+          select.appendChild(option);
+        });
+      }
+
+      function checkStock() {
+        const key = document.getElementById("itemSelect").value;
+
+        const item = items.find(i => i.key === key);
+
+        document.getElementById("result").innerText =
+          item ? ("Stock Available: " + item.qtyOnHand) : "Item not found";
+      }
+
+      loadItems();
+    </script>
+  `);
+});
+
 app.get("/get-customers", async (req, res) => {
   try {
     const response = await axios.get(
