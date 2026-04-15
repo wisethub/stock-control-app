@@ -176,36 +176,40 @@ app.get("/stock-check", (req, res) => {
     <h3 id="result"></h3>
 
     <script>
-      let items = [];
+  let items = [];
 
-      async function loadItems() {
-        const res = await fetch('/get-items');
-        const data = await res.json();
+  async function loadItems() {
+    const res = await fetch('/get-items');
+    const data = await res.json();
 
-        items = data.inventoryItems || [];
+    items = data.inventoryItems || [];
 
-        const select = document.getElementById("itemSelect");
+    const select = document.getElementById("itemSelect");
 
-        items.forEach(item => {
-          const option = document.createElement("option");
-          option.value = item.key;
-          option.text = item.itemName;
-          select.appendChild(option);
-        });
-      }
+    items.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.key;
+      option.text = item.itemName + " | Stock: " + item.qtyOnHand;
+      select.appendChild(option);
+    });
 
-      function checkStock() {
-        const key = document.getElementById("itemSelect").value;
+    // 🔥 Show stock immediately when changed
+    select.addEventListener("change", showStock);
 
-        const item = items.find(i => i.key === key);
+    // 🔥 Show first item automatically
+    showStock();
+  }
 
-        document.getElementById("result").innerText =
-          item ? ("Stock Available: " + item.qtyOnHand) : "Item not found";
-      }
+  function showStock() {
+    const key = document.getElementById("itemSelect").value;
+    const item = items.find(i => i.key === key);
 
-      loadItems();
-    </script>
-  `);
+    document.getElementById("result").innerText =
+      item ? ("Item: " + item.itemName + " | Stock: " + item.qtyOnHand) : "Item not found";
+  }
+
+  loadItems();
+</script>  `);
 });
 
 app.get("/get-customers", async (req, res) => {
