@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 const MANAGER_API = "https://wiset.manager.io/api2";
 const TOKEN = process.env.MANAGER_API_TOKEN;
 
-// 🔥 Your real customer key (already correct)
+// ✅ Your real customer key
 const CUSTOMER_KEY = "8b2b501c-84c9-4ee8-b0e4-30a25298b829";
 
 app.use(express.json());
@@ -68,7 +68,7 @@ app.post("/create-invoice", async (req, res) => {
 
     const invoiceItems = req.body.items || [];
 
-    // ✅ GET INVENTORY (FIXED)
+    // 🔹 GET INVENTORY
     const response = await axios.get(
       `${MANAGER_API}/inventory-items`,
       {
@@ -78,9 +78,7 @@ app.post("/create-invoice", async (req, res) => {
 
     const inventory = response.data.inventoryItems || [];
 
-    console.log("Inventory count:", inventory.length);
-
-    // ✅ VALIDATE STOCK
+    // 🔹 VALIDATE STOCK
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.key === item.key);
 
@@ -94,28 +92,28 @@ app.post("/create-invoice", async (req, res) => {
       const qty = Number(stockItem.qtyOnHand || 0);
 
       if (qty < item.quantity) {
-  return res.json({
-    success: false,
-    message: "❌ Insufficient stock for " + stockItem.itemName
-  });
-}
+        return res.json({
+          success: false,
+          message: "❌ Insufficient stock for " + stockItem.itemName
+        });
+      }
     }
 
-    // ✅ CREATE INVOICE (FINAL CORRECT FORMAT)
+    // ✅ FINAL CORRECT MANAGER FORMAT (IMPORTANT FIX)
     const invoicePayload = {
-      contact: { key: CUSTOMER_KEY },
-      date: new Date().toISOString().split("T")[0],
-      reference: "API Invoice",
-      lines: invoiceItems.map(item => ({
-        inventoryItem: { key: item.key },
-        quantity: item.quantity
+      Contact: CUSTOMER_KEY,
+      Date: new Date().toISOString().split("T")[0],
+      Reference: "API Invoice",
+      Lines: invoiceItems.map(item => ({
+        InventoryItem: item.key,
+        Qty: item.quantity
       }))
     };
 
     console.log("PAYLOAD:", JSON.stringify(invoicePayload, null, 2));
 
     const createRes = await axios.post(
-  `${MANAGER_API}/sales-invoices`,
+      `${MANAGER_API}/sales-invoices`,
       invoicePayload,
       {
         headers: {
