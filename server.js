@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 3000;
 const MANAGER_API = "https://wiset.manager.io/api2";
 const TOKEN = process.env.MANAGER_API_TOKEN;
 
-// ✅ Your real customer key
 const CUSTOMER_KEY = "8b2b501c-84c9-4ee8-b0e4-30a25298b829";
 
 app.use(express.json());
@@ -41,27 +40,28 @@ app.get("/manager-extension", (req, res) => {
       }
 
       async function createInvoice() {
-  const key = document.getElementById("itemSelect").value;
-  const quantity = Number(document.getElementById("qty").value);
+        const key = document.getElementById("itemSelect").value;
+        const quantity = Number(document.getElementById("qty").value);
 
-  const res = await fetch('/create-invoice', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      items: [{ key, quantity }]
-    })
-  });
+        const res = await fetch('/create-invoice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: [{ key, quantity }]
+          })
+        });
 
-  const data = await res.json();
-  alert(data.message);
+        const data = await res.json();
+        alert(data.message);
 
-  if (data.success) {
-    window.open(
-      "https://wiset.manager.io/start?ogYXUFJPRFVDVElPTiBURVNUIENPTVBBTlk#/sales-invoices",
-      "_blank"
-    );
-  }
-}
+        if (data.success) {
+          window.open(
+            "https://wiset.manager.io/start?ogYXUFJPRFVDVElPTiBURVNUIENPTVBBTlk#/sales-invoices",
+            "_blank"
+          );
+        }
+      }
+
       loadItems();
     </script>
   `);
@@ -70,11 +70,8 @@ app.get("/manager-extension", (req, res) => {
 /* ================= BACKEND ================= */
 app.post("/create-invoice", async (req, res) => {
   try {
-    console.log("CREATE INVOICE START");
-
     const invoiceItems = req.body.items || [];
 
-    // 🔹 GET INVENTORY
     const response = await axios.get(
       `${MANAGER_API}/inventory-items`,
       {
@@ -84,15 +81,11 @@ app.post("/create-invoice", async (req, res) => {
 
     const inventory = response.data.inventoryItems || [];
 
-    // 🔹 VALIDATE STOCK
     for (let item of invoiceItems) {
       const stockItem = inventory.find(i => i.key === item.key);
 
       if (!stockItem) {
-        return res.json({
-          success: false,
-          message: "❌ Item not found"
-        });
+        return res.json({ success: false, message: "❌ Item not found" });
       }
 
       const qty = Number(stockItem.qtyOnHand || 0);
@@ -105,45 +98,15 @@ app.post("/create-invoice", async (req, res) => {
       }
     }
 
-    // ✅ FINAL WORKING MANAGER FORMAT
-    const invoicePayload = {
-      Contact: CUSTOMER_KEY,
-      Date: new Date().toISOString(),
-      Reference: "API Invoice",
-      Lines: invoiceItems.map(item => ({
-        InventoryItem: item.key,
-        Qty: item.quantity,
-        UnitPrice: 0
-      }))
-    };
-
-    console.log("PAYLOAD:", JSON.stringify(invoicePayload, null, 2));
-
-    // 🔥 CORRECT CREATE ENDPOINT
-    const createRes = await axios.post(
-      `${MANAGER_API}/sales-invoices`,
-      invoicePayload,
-      {
-        headers: {
-          "X-API-KEY": TOKEN,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-    console.log("SUCCESS RESPONSE:", createRes.data);
-
     return res.json({
-  success: true,
-  message: "✅ Stock OK — proceed to create invoice"
-});
+      success: true,
+      message: "✅ Stock OK — proceed to create invoice"
+    });
 
   } catch (error) {
-    console.error("🔥 FULL ERROR:", error.response?.data || error.message);
-
     return res.json({
       success: false,
-      message: JSON.stringify(error.response?.data || error.message)
+      message: error.response?.data || error.message
     });
   }
 });
@@ -165,7 +128,7 @@ app.get("/get-items", async (req, res) => {
   }
 });
 
-/* ================= GET CUSTOMERS ================= */
+/* ================= SMART SEARCH (FIXED) ================= */
 app.get("/stock-check", (req, res) => {
   res.send(`
     <h2>🔍 Smart Stock Search</h2>
@@ -195,17 +158,20 @@ app.get("/stock-check", (req, res) => {
           i.itemName && i.itemName.toLowerCase().includes(query)
         );
 
+        let html = "";
+
         if (filtered.length === 0) {
-          resultsDiv.innerHTML = "<p>No item found</p>";
-          return;
+          html = "<p>No item found</p>";
+        } else {
+          filtered.forEach(item => {
+            html += "<div style='padding:8px;border-bottom:1px solid #ccc;'>";
+            html += "<strong>" + item.itemName + "</strong><br/>";
+            html += "Stock: " + item.qtyOnHand;
+            html += "</div>";
+          });
         }
 
-        resultsDiv.innerHTML = filtered.map(item => `
-          <div style="padding:8px;border-bottom:1px solid #ccc;">
-            <strong>\${item.itemName}</strong><br/>
-            Stock: \${item.qtyOnHand}
-          </div>
-        `).join("");
+        resultsDiv.innerHTML = html;
       }
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -214,24 +180,6 @@ app.get("/stock-check", (req, res) => {
       });
     </script>
   `);
-});
-app.get("/get-customers", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `${MANAGER_API}/customers`,
-      {
-        headers: { "X-API-KEY": TOKEN }
-      }
-    );
-
-    res.json(response.data);
-
-  } catch (error) {
-    res.json({
-      success: false,
-      message: error.response?.data || error.message
-    });
-  }
 });
 
 app.listen(PORT, () => {
