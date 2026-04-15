@@ -99,19 +99,21 @@ app.post("/create-invoice", async (req, res) => {
       }
     }
 
-    // ✅ FINAL CORRECT MANAGER FORMAT (IMPORTANT FIX)
+    // ✅ FINAL WORKING MANAGER FORMAT
     const invoicePayload = {
       Contact: CUSTOMER_KEY,
-      Date: new Date().toISOString().split("T")[0],
+      Date: new Date().toISOString(),
       Reference: "API Invoice",
       Lines: invoiceItems.map(item => ({
         InventoryItem: item.key,
-        Qty: item.quantity
+        Qty: item.quantity,
+        UnitPrice: 0
       }))
     };
 
     console.log("PAYLOAD:", JSON.stringify(invoicePayload, null, 2));
 
+    // 🔥 CORRECT CREATE ENDPOINT
     const createRes = await axios.post(
       `${MANAGER_API}/sales-invoices`,
       invoicePayload,
